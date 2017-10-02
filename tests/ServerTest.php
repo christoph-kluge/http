@@ -511,7 +511,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: 5\r\n";
         $data .= "\r\n";
 
@@ -930,7 +930,7 @@ class ServerTest extends TestCase
         $data = "GET / HTTP/1.1\r\n\r\n";
         $this->connection->emit('data', array($data));
 
-        $this->assertEquals("HTTP/1.1 200 OK\r\nUpgrade: demo\r\nContent-Length: 3\r\nConnection: close\r\n\r\nfoo", $buffer);
+        $this->assertEquals("HTTP/1.1 200 OK\r\nUpgrade: demo\r\nContent-Length: 3\r\nConnection: keep-alive\r\n\r\nfoo", $buffer);
     }
 
     public function testUpgradeWishInRequestCanBeIgnoredByReturningNormalResponse()
@@ -958,7 +958,7 @@ class ServerTest extends TestCase
         $data = "GET / HTTP/1.1\r\nUpgrade: demo\r\n\r\n";
         $this->connection->emit('data', array($data));
 
-        $this->assertEquals("HTTP/1.1 200 OK\r\nContent-Length: 3\r\nConnection: close\r\n\r\nfoo", $buffer);
+        $this->assertEquals("HTTP/1.1 200 OK\r\nContent-Length: 3\r\nConnection: keep-alive\r\n\r\nfoo", $buffer);
     }
 
     public function testUpgradeSwitchingProtocolIncludesConnectionUpgradeHeaderWithoutContentLength()
@@ -1280,7 +1280,7 @@ class ServerTest extends TestCase
         $server->listen($this->socket);
         $this->socket->emit('connection', array($this->connection));
 
-        $data = "GET / HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\nX-DATA: ";
+        $data = "GET / HTTP/1.1\r\nHost: example.com\r\nConnection: keep-alive\r\nX-DATA: ";
         $data .= str_repeat('A', 4097 - strlen($data)) . "\r\n\r\n";
         $this->connection->emit('data', array($data));
 
@@ -1344,7 +1344,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: 5\r\n";
         $data .= "\r\n";
         $data .= "hello";
@@ -1375,7 +1375,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Transfer-Encoding: chunked\r\n";
         $data .= "\r\n";
         $data .= "5\r\nhello\r\n";
@@ -1407,7 +1407,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Transfer-Encoding: chunked\r\n";
         $data .= "\r\n";
         $data .= "5\r\nhello\r\n";
@@ -1438,7 +1438,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Transfer-Encoding: chunked\r\n";
         $data .= "\r\n";
         $data .= "0\r\n\r\n";
@@ -1467,7 +1467,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Transfer-Encoding: CHUNKED\r\n";
         $data .= "\r\n";
         $data .= "5\r\nhello\r\n";
@@ -1497,7 +1497,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Transfer-Encoding: CHunKeD\r\n";
         $data .= "\r\n";
         $data .= "5\r\nhello\r\n";
@@ -1592,7 +1592,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: 5\r\n";
         $data .= "\r\n";
         $data .= "hello";
@@ -1623,7 +1623,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: 5\r\n";
         $data .= "\r\n";
         $data .= "hello";
@@ -1657,7 +1657,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: 0\r\n";
         $data .= "\r\n";
 
@@ -1685,7 +1685,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: 0\r\n";
         $data .= "\r\n";
         $data .= "hello";
@@ -1714,7 +1714,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: 0\r\n";
         $data .= "\r\n";
 
@@ -1748,7 +1748,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: 4\r\n";
         $data .= "Transfer-Encoding: chunked\r\n";
         $data .= "\r\n";
@@ -1787,7 +1787,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         // this is valid behavior according to: https://www.ietf.org/rfc/rfc2616.txt chapter 4.4
         $data .= "Content-Length: hello world\r\n";
         $data .= "Transfer-Encoding: chunked\r\n";
@@ -1829,7 +1829,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: bla\r\n";
         $data .= "\r\n";
         $data .= "hello";
@@ -1866,7 +1866,7 @@ class ServerTest extends TestCase
 
         $data = "HEAD / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: bla\r\n";
         $data .= "\r\n";
         $data .= "hello";
@@ -1903,7 +1903,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: 5, 3, 4\r\n";
         $data .= "\r\n";
         $data .= "hello";
@@ -1931,7 +1931,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Transfer-Encoding: chunked\r\n";
         $data .= "\r\n";
         $data .= "hello\r\hello\r\n";
@@ -1955,7 +1955,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Transfer-Encoding: chunked\r\n";
         $data .= "\r\n";
         for ($i = 0; $i < 1025; $i++) {
@@ -1981,7 +1981,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Transfer-Encoding: chunked\r\n";
         $data .= "\r\n";
         $data .= "5\r\nhello world\r\n";
@@ -2005,7 +2005,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Transfer-Encoding: chunked\r\n";
         $data .= "\r\n";
         $data .= "5\r\nhello\r\n";
@@ -2028,7 +2028,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Transfer-Encoding: chunked\r\n";
         $data .= "\r\n";
         $data .= "hello\r\nhello\r\n";
@@ -2050,7 +2050,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Content-Length: 5\r\n";
         $data .= "\r\n";
         $data .= "hello";
@@ -2357,7 +2357,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Transfer-Encoding: custom\r\n";
         $data .= "\r\n";
 
@@ -2426,7 +2426,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Expect: 100-continue\r\n";
         $data .= "\r\n";
 
@@ -2489,7 +2489,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Expect: 100-continue\r\n";
         $data .= "\r\n";
 
@@ -2994,7 +2994,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Cookie: hello=world\r\n";
         $data .= "\r\n";
 
@@ -3016,7 +3016,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Cookie: hello=world\r\n";
         $data .= "Cookie: test=failed\r\n";
         $data .= "\r\n";
@@ -3038,7 +3038,7 @@ class ServerTest extends TestCase
 
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "Cookie: hello=world; test=abc\r\n";
         $data .= "\r\n";
 
@@ -3050,7 +3050,7 @@ class ServerTest extends TestCase
     {
         $data = "GET / HTTP/1.1\r\n";
         $data .= "Host: example.com:80\r\n";
-        $data .= "Connection: close\r\n";
+        $data .= "Connection: keep-alive\r\n";
         $data .= "\r\n";
 
         return $data;

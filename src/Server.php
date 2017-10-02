@@ -3,6 +3,9 @@
 namespace React\Http;
 
 use Evenement\EventEmitter;
+use React\EventLoop\Factory;
+use React\EventLoop\LoopInterface;
+use React\EventLoop\Timer\Timer;
 use React\Socket\ServerInterface;
 use React\Socket\ConnectionInterface;
 use Psr\Http\Message\RequestInterface;
@@ -76,6 +79,7 @@ use React\Stream\WritableStreamInterface;
 class Server extends EventEmitter
 {
     private $callback;
+    private $loop;
 
     /**
      * Creates an HTTP server that invokes the given callback for each incoming HTTP request
@@ -86,15 +90,17 @@ class Server extends EventEmitter
      * See also [listen()](#listen) for more details.
      *
      * @param callable $callback
+     * @param LoopInterface $loop
      * @see self::listen()
      */
-    public function __construct($callback)
+    public function __construct($callback, LoopInterface $loop = null)
     {
         if (!is_callable($callback)) {
             throw new \InvalidArgumentException();
         }
 
         $this->callback = $callback;
+        $this->loop = $loop ?: Factory::create();
     }
 
     /**
@@ -145,8 +151,12 @@ class Server extends EventEmitter
     }
 
     /** @internal */
-    public function handleConnection(ConnectionInterface $conn)
+    public function handleConnection(ConnectionInterface $conn) : self
     {
+//        var_dump('incoming connection: ');
+//        var_dump($conn);
+//        var_dump($conn->getLocalAddress(), $conn->getRemoteAddress());
+
         $uriLocal = $conn->getLocalAddress();
         if ($uriLocal !== null && strpos($uriLocal, '://') === false) {
             // local URI known but does not contain a scheme. Should only happen for old Socket < 0.8
@@ -167,10 +177,34 @@ class Server extends EventEmitter
         $that = $this;
         $parser = new RequestHeaderParser($uriLocal, $uriRemote);
 
-        $listener = array($parser, 'feed');
-        $parser->on('headers', function (RequestInterface $request, $bodyBuffer) use ($conn, $listener, $parser, $that) {
+
+        $loop = $this->loop;
+        $headerParser = array($parser, 'feed');
+
+//         periodic timeout to close idle connections..
+        $seconds = 15;
+        $timeoutListener = function () use ($loop, $conn, $parser, $seconds) {
+          $i = 0;
+          $loop->addPeriodicTimer(1, function(Timer $timer) use (&$i, $parser, $conn, $loop, $seconds) {
+            echo $conn->getRemoteAddress() . ' #' . $i++ . ' tick' . PHP_EOL;
+
+            if ($i >= $seconds) {
+              echo $conn->getRemoteAddress() . ' #' . $i . ' tick closed connection' . PHP_EOL;
+              $loop->cancelTimer($timer);
+              $conn->close();
+            }
+
+            $parser->on('headers', function () use ($conn, $loop, $timer) {
+              echo $conn->getRemoteAddress() . ' got new headers.. resetting ' . PHP_EOL;
+              $loop->cancelTimer($timer);
+            });
+          });
+        };
+        $conn->on('finish', $timeoutListener);
+
+        $parser->on('headers', function (RequestInterface $request, $bodyBuffer) use ($conn, $headerParser, $parser, $that, $loop) {
             // parsing request completed => stop feeding parser
-            $conn->removeListener('data', $listener);
+            $conn->removeListener('data', $headerParser);
 
             $that->handleRequest($conn, $request);
 
@@ -179,15 +213,20 @@ class Server extends EventEmitter
             }
         });
 
-        $conn->on('data', $listener);
-        $parser->on('error', function(\Exception $e) use ($conn, $listener, $that) {
-            $conn->removeListener('data', $listener);
+        $parser->on('error', function(\Exception $e) use ($conn, $headerParser, $that) {
             $that->emit('error', array($e));
-
             $that->writeError(
                 $conn,
                 $e->getCode() !== 0 ? $e->getCode() : 400
             );
+        });
+
+        $conn->on('data', $headerParser);
+
+        // if connection ends also remove listeners
+        // end vs. close
+        $conn->on('end', function () use ($parser) {
+            $parser->removeAllListeners();
         });
     }
 
@@ -221,6 +260,8 @@ class Server extends EventEmitter
             $stream = new LengthLimitedStream($stream, $contentLength);
         }
 
+//        var_dump(get_class($stream));
+
         $request = $request->withBody(new HttpBodyStream($stream, $contentLength));
 
         if ($request->getProtocolVersion() !== '1.0' && '100-continue' === strtolower($request->getHeaderLine('Expect'))) {
@@ -237,6 +278,7 @@ class Server extends EventEmitter
         // cancel pending promise once connection closes
         if ($cancel instanceof CancellablePromiseInterface) {
             $conn->on('close', function () use ($cancel) {
+//                var_dump(__METHOD__ . ' cancel ' . get_class($cancel));
                 $cancel->cancel();
             });
         }
@@ -274,8 +316,9 @@ class Server extends EventEmitter
         if ($contentLength === 0) {
             // If Body is empty or Content-Length is 0 and won't emit further data,
             // 'data' events from other streams won't be called anymore
-            $stream->emit('end');
-            $stream->close();
+//            var_dump(__METHOD__ . ' end 1');
+//            $stream->emit('end');
+//            $stream->close();
         }
     }
 
@@ -342,7 +385,10 @@ class Server extends EventEmitter
         // HTTP/1.1 assumes persistent connection support by default
         // we do not support persistent connections, so let the client know
         if ($request->getProtocolVersion() === '1.1') {
-            $response = $response->withHeader('Connection', 'close');
+            $response = $response->withHeader('Connection', 'keep-alive');
+            if (strtolower($request->getHeaderLine('Connection')) === 'close') {
+              $response = $response->withHeader('Connection', 'close');
+            }
         }
         // 2xx response to CONNECT and 1xx and 204 MUST NOT include Content-Length or Transfer-Encoding header
         $code = $response->getStatusCode();
@@ -357,8 +403,6 @@ class Server extends EventEmitter
         }
 
         // 101 (Switching Protocols) response uses Connection: upgrade header
-        // persistent connections are currently not supported, so do not use
-        // this for any other replies in order to preserve "Connection: close"
         if ($code === 101) {
             $response = $response->withHeader('Connection', 'upgrade');
         }
@@ -371,12 +415,14 @@ class Server extends EventEmitter
                 // request is still streaming => wait for request close before forwarding following data from connection
                 $request->getBody()->on('close', function () use ($connection, $body) {
                     if ($body->input->isWritable()) {
+//                      var_dump('pipe 1');
                         $connection->pipe($body->input);
                         $connection->resume();
                     }
                 });
             } elseif ($body->input->isWritable()) {
                 // request already closed => forward following data from connection
+//              var_dump('pipe 2');
                 $connection->pipe($body->input);
                 $connection->resume();
             }
@@ -389,21 +435,31 @@ class Server extends EventEmitter
     {
         if (!$response->getBody() instanceof HttpBodyStream) {
             $connection->write(Psr7Implementation\str($response));
-            return $connection->end();
+
+            if (strtolower($response->getHeaderLine('Connection')) === 'close') {
+//              var_dump(__METHOD__ . ' end 1 with close ' . get_class($connection));
+              $connection->end();
+              return;
+            }
+
+            $connection->emit('finish', array($response));
+//            var_dump(__METHOD__ . ' end 1 with ' . strtolower($response->getHeaderLine('Connection')));
+            return;
         }
 
-        $stream = $response->getBody();
+        $bodyStream = $response->getBody();
 
         // close response stream if connection is already closed
         if (!$connection->isWritable()) {
-            return $stream->close();
+//            var_dump(__METHOD__ . ' close 1');
+            return $bodyStream->close();
         }
 
         $connection->write(Psr7Implementation\str($response));
 
-        if ($stream->isReadable()) {
+        if ($bodyStream->isReadable()) {
             if ($response->getHeaderLine('Transfer-Encoding') === 'chunked') {
-                $stream = new ChunkedEncoder($stream);
+                $bodyStream = new ChunkedEncoder($bodyStream);
             }
 
             // Close response stream once connection closes.
@@ -411,14 +467,16 @@ class Server extends EventEmitter
             // in particular this may only fire on a later read/write attempt
             // because we stop/pause reading from the connection once the
             // request has been processed.
-            $connection->on('close', array($stream, 'close'));
+            $connection->on('close', array($bodyStream, 'close'));
 
-            $stream->pipe($connection);
+//            var_dump(__METHOD__ . ' pipe 3');
+            $bodyStream->pipe($connection);
         } else {
             if ($response->getHeaderLine('Transfer-Encoding') === 'chunked') {
                 $connection->write("0\r\n\r\n");
             }
 
+//            var_dump(__METHOD__ . ' end 2');
             $connection->end();
         }
     }

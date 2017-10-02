@@ -4,7 +4,6 @@ namespace React\Http;
 
 use RingCentral\Psr7\Response as Psr7Response;
 use React\Stream\ReadableStreamInterface;
-use React\Http\HttpBodyStream;
 
 /**
  * Implementation of the PSR-7 ResponseInterface

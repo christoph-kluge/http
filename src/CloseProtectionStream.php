@@ -12,7 +12,7 @@ use React\Stream\Util;
  * */
 class CloseProtectionStream extends EventEmitter implements ReadableStreamInterface
 {
-    private $connection;
+    private $input;
     private $closed = false;
 
     /**
@@ -35,6 +35,7 @@ class CloseProtectionStream extends EventEmitter implements ReadableStreamInterf
 
     public function pause()
     {
+//        var_dump(__METHOD__);
         if ($this->closed) {
             return;
         }
@@ -44,6 +45,7 @@ class CloseProtectionStream extends EventEmitter implements ReadableStreamInterf
 
     public function resume()
     {
+//        var_dump(__METHOD__);
         if ($this->closed) {
             return;
         }
@@ -53,6 +55,7 @@ class CloseProtectionStream extends EventEmitter implements ReadableStreamInterf
 
     public function pipe(WritableStreamInterface $dest, array $options = array())
     {
+//        var_dump(__METHOD__ . ' .. ' . get_class($dest));
         Util::pipe($this, $dest, $options);
 
         return $dest;
@@ -60,6 +63,7 @@ class CloseProtectionStream extends EventEmitter implements ReadableStreamInterf
 
      public function close()
      {
+//          var_dump(__METHOD__ . ' -> ' . (int)$this->closed);
          if ($this->closed) {
              return;
          }
@@ -82,12 +86,14 @@ class CloseProtectionStream extends EventEmitter implements ReadableStreamInterf
      /** @internal */
      public function handleData($data)
      {
+//       var_dump(__METHOD__);
         $this->emit('data', array($data));
      }
 
      /** @internal */
      public function handleEnd()
      {
+//       var_dump(__METHOD__);
          $this->emit('end');
          $this->close();
      }
@@ -95,6 +101,7 @@ class CloseProtectionStream extends EventEmitter implements ReadableStreamInterf
      /** @internal */
      public function handleError(\Exception $e)
      {
+//       var_dump(__METHOD__);
          $this->emit('error', array($e));
      }
 

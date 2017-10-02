@@ -27,7 +27,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri());
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);
@@ -53,7 +53,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(new MiddlewareRunner(array(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri());
-        })));
+        })), $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);
@@ -81,7 +81,7 @@ class FunctionalServerTest extends TestCase
             function () {
                 return new Response(404);
             },
-        )));
+        )), $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);
@@ -106,7 +106,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri());
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);
@@ -132,7 +132,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri());
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);
@@ -164,7 +164,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri());
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $socket = new SecureServer($socket, $loop, array(
@@ -199,7 +199,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri());
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $socket = new SecureServer($socket, $loop, array(
@@ -233,7 +233,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri());
-        });
+        }, $loop);
 
         $server->listen($socket);
 
@@ -263,7 +263,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri());
-        });
+        }, $loop);
 
         $server->listen($socket);
 
@@ -302,7 +302,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri());
-        });
+        }, $loop);
 
         $server->listen($socket);
 
@@ -341,7 +341,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri());
-        });
+        }, $loop);
 
         $server->listen($socket);
 
@@ -371,7 +371,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri());
-        });
+        }, $loop);
 
         $server->listen($socket);
 
@@ -410,7 +410,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) {
             return new Response(200, array(), (string)$request->getUri() . 'x' . $request->getHeaderLine('Host'));
-        });
+        }, $loop);
 
         $server->listen($socket);
 
@@ -438,7 +438,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) use ($stream) {
             return new Response(200, array(), $stream);
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);
@@ -467,7 +467,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) use ($stream) {
             return new Response(200, array(), $stream);
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);
@@ -500,7 +500,7 @@ class FunctionalServerTest extends TestCase
 
         $server = new Server(function (RequestInterface $request) use ($stream) {
             return new Response(200, array(), $stream);
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);
@@ -541,7 +541,7 @@ class FunctionalServerTest extends TestCase
             });
 
             return new Response(101, array('Upgrade' => 'echo'), $stream);
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);
@@ -578,7 +578,7 @@ class FunctionalServerTest extends TestCase
             });
 
             return new Response(200, array(), $stream);
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);
@@ -619,7 +619,7 @@ class FunctionalServerTest extends TestCase
                     $resolve(new Response(200, array(), $stream));
                 });
             });
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);
@@ -653,7 +653,7 @@ class FunctionalServerTest extends TestCase
             $stream->close();
 
             return new Response(200, array(), $stream);
-        });
+        }, $loop);
 
         $socket = new Socket(0, $loop);
         $server->listen($socket);

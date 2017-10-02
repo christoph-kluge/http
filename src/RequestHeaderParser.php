@@ -4,6 +4,7 @@ namespace React\Http;
 
 use Evenement\EventEmitter;
 use Exception;
+use Psr\Http\Message\ServerRequestInterface;
 use RingCentral\Psr7 as g7;
 
 /**
@@ -40,7 +41,7 @@ class RequestHeaderParser extends EventEmitter
 
         if ($currentHeaderSize > $this->maxSize) {
             $this->emit('error', array(new \OverflowException("Maximum header size of {$this->maxSize} exceeded.", 431), $this));
-            $this->removeAllListeners();
+//            $this->removeAllListeners();
             return;
         }
 
@@ -50,7 +51,7 @@ class RequestHeaderParser extends EventEmitter
             } catch (Exception $exception) {
                 $this->emit('error', array($exception));
             }
-            $this->removeAllListeners();
+//            $this->removeAllListeners();
         }
     }
 
@@ -219,6 +220,13 @@ class RequestHeaderParser extends EventEmitter
 
         // always sanitize Host header because it contains critical routing information
         $request = $request->withUri($request->getUri()->withUserInfo('u')->withUserInfo(''));
+
+
+        // shoul return ServerRequestInterface
+
+        return new class implements ServerRequestInterface {
+
+        };
 
         return $request;
     }
